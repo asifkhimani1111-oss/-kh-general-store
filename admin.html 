@@ -1,1 +1,384 @@
-o
+
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K.H GENERAL STORE - Admin</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5f9;font-family:Arial,sans-serif;color:#172033}
+header{background:#102b50;color:white;padding:18px;text-align:center}
+main{max-width:700px;margin:auto;padding:15px}
+.card{background:white;padding:16px;margin:14px 0;border-radius:14px;box-shadow:0 2px 10px #0001}
+h2{font-size:19px;margin-top:0}
+input,select,button{width:100%;padding:12px;margin:7px 0;border:1px solid #ccd3dd;border-radius:9px;font-size:16px}
+button{background:#1265c8;color:white;border:0;font-weight:bold}
+button.danger{background:#c62828}
+button.gray{background:#586575}
+img.preview{width:100%;max-height:220px;object-fit:contain;background:#edf1f5;border-radius:10px;margin-top:8px}
+.item{border:1px solid #ddd;padding:12px;border-radius:10px;margin:10px 0}
+.item img{width:90px;height:90px;object-fit:cover;border-radius:8px}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.small{font-size:13px;color:#657080}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<header>
+<h2>K.H GENERAL STORE</h2>
+<div>Admin Panel</div>
+</header>
+
+<main>
+<section id="loginBox" class="card">
+<h2>Admin Login</h2>
+<input id="email" type="email" placeholder="Admin Email">
+<input id="password" type="password" placeholder="Password">
+<button id="loginBtn">Login</button>
+<p id="loginMsg"></p>
+</section>
+
+<section id="adminBox" class="hidden">
+
+<div class="card">
+<h2>દુકાનનો ફોટો</h2>
+<input id="storePhoto" type="file" accept="image/*">
+<img id="storePreview" class="preview hidden">
+<button id="saveStorePhoto">દુકાનનો ફોટો Save કરો</button>
+<p class="small">ફોનની Galleryમાંથી ફોટો પસંદ કરો.</p>
+</div>
+
+<div class="card">
+<h2 id="formTitle">નવી પ્રોડક્ટ ઉમેરો</h2>
+
+<input id="productName" placeholder="પ્રોડક્ટનું નામ">
+
+<select id="category">
+<option value="fruits">ફળો</option>
+<option value="vegetables">શાકભાજી</option>
+<option value="groceries">કરિયાણું</option>
+<option value="oil">તેલ</option>
+<option value="soap">સાબુ</option>
+<option value="other">અન્ય</option>
+</select>
+
+<input id="price" type="number" min="0" step="0.01" placeholder="કિંમત">
+
+<select id="unit">
+<option value="kg">કિલો (kg)</option>
+<option value="piece">નંગ (piece)</option>
+<option value="packet">પેકેટ (packet)</option>
+<option value="liter">લિટર (liter)</option>
+<option value="bottle">બોટલ (bottle)</option>
+</select>
+
+<label>પ્રોડક્ટનો ફોટો Galleryમાંથી પસંદ કરો</label>
+<input id="productPhoto" type="file" accept="image/*">
+<img id="productPreview" class="preview hidden">
+
+<label>
+<input id="active" type="checkbox" checked style="width:auto">
+ ગ્રાહકને પ્રોડક્ટ દેખાડો
+</label>
+
+<button id="saveProduct">પ્રોડક્ટ Save કરો</button>
+<button id="cancelEdit" class="gray hidden">Edit બંધ કરો</button>
+<p id="formMsg"></p>
+</div>
+
+<div class="card">
+<h2>તમારી પ્રોડક્ટ્સ</h2>
+<div id="productList">લોડ થઈ રહ્યું છે...</div>
+</div>
+
+<button id="logoutBtn" class="danger">Logout</button>
+</section>
+</main>
+
+<script type="module">
+import {auth,db} from "./firebase.js";
+
+import {
+ signInWithEmailAndPassword,
+ onAuthStateChanged,
+ signOut
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+ collection,addDoc,getDocs,doc,updateDoc,deleteDoc,
+ getDoc,setDoc
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const ADMIN_UID="4Eg2Ir02WJNKxufdwoGn9GrcjGK2";
+
+const $=id=>document.getElementById(id);
+
+let editingId=null;
+let productPhotoData="";
+let storePhotoData="";
+
+$("loginBtn").onclick=async()=>{
+ $("loginMsg").textContent="Login થઈ રહ્યું છે...";
+ try{
+  await signInWithEmailAndPassword(
+   auth,$("email").value.trim(),$("password").value
+  );
+ }catch(e){
+  $("loginMsg").textContent="Login ભૂલ: "+e.message;
+ }
+};
+
+onAuthStateChanged(auth,async user=>{
+ if(user && user.uid===ADMIN_UID){
+  $("loginBox").classList.add("hidden");
+  $("adminBox").classList.remove("hidden");
+  await loadProducts();
+  await loadStorePhoto();
+ }else{
+  $("adminBox").classList.add("hidden");
+  $("loginBox").classList.remove("hidden");
+  if(user){
+   $("loginMsg").textContent="આ એકાઉન્ટ Admin નથી.";
+   await signOut(auth);
+  }
+ }
+});
+
+$("logoutBtn").onclick=()=>signOut(auth);
+
+function compressImage(file){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error("ફોટો વાંચી શકાયો નથી"));
+  reader.onload=()=>{
+   const img=new Image();
+   img.onerror=()=>reject(new Error("ફોટો ખોલી શકાયો નથી"));
+   img.onload=()=>{
+    const max=700;
+    const scale=Math.min(1,max/Math.max(img.width,img.height));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.round(img.width*scale);
+    canvas.height=Math.round(img.height*scale);
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+    let quality=.65;
+    let data=canvas.toDataURL("image/jpeg",quality);
+
+    while(data.length>180000 && quality>.30){
+     quality-=.08;
+     data=canvas.toDataURL("image/jpeg",quality);
+    }
+
+    if(data.length>200000){
+     reject(new Error("ફોટો બહુ મોટો છે. બીજો નાનો ફોટો પસંદ કરો."));
+    }else{
+     resolve(data);
+    }
+   };
+   img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+ });
+}
+
+$("productPhoto").onchange=async e=>{
+ const file=e.target.files[0];
+ if(!file)return;
+ try{
+  $("formMsg").textContent="ફોટો તૈયાર થઈ રહ્યો છે...";
+  productPhotoData=await compressImage(file);
+  $("productPreview").src=productPhotoData;
+  $("productPreview").classList.remove("hidden");
+  $("formMsg").textContent="ફોટો તૈયાર છે.";
+ }catch(err){
+  $("formMsg").textContent=err.message;
+ }
+};
+
+$("storePhoto").onchange=async e=>{
+ const file=e.target.files[0];
+ if(!file)return;
+ try{
+  storePhotoData=await compressImage(file);
+  $("storePreview").src=storePhotoData;
+  $("storePreview").classList.remove("hidden");
+ }catch(err){
+  alert(err.message);
+ }
+};
+
+async function loadStorePhoto(){
+ try{
+  const snap=await getDoc(doc(db,"settings","store"));
+  if(snap.exists() && snap.data().photo){
+   $("storePreview").src=snap.data().photo;
+   $("storePreview").classList.remove("hidden");
+  }
+ }catch(e){
+  console.error(e);
+ }
+}
+
+$("saveStorePhoto").onclick=async()=>{
+ if(!storePhotoData){
+  alert("પહેલાં Galleryમાંથી ફોટો પસંદ કરો.");
+  return;
+ }
+ try{
+  await setDoc(doc(db,"settings","store"),{
+   photo:storePhotoData
+  },{merge:true});
+  alert("દુકાનનો ફોટો Save થયો.");
+  storePhotoData="";
+ }catch(e){
+  alert("Save ભૂલ: "+e.message);
+ }
+};
+
+$("saveProduct").onclick=async()=>{
+ const name=$("productName").value.trim();
+ const price=Number($("price").value);
+
+ if(!name || !Number.isFinite(price) || price<=0){
+  $("formMsg").textContent="નામ અને યોગ્ય કિંમત લખો.";
+  return;
+ }
+
+ const data={
+  name,
+  category:$("category").value,
+  price,
+  unit:$("unit").value,
+  active:$("active").checked
+ };
+
+ if(productPhotoData){
+  data.photo=productPhotoData;
+ }
+
+ try{
+  $("saveProduct").disabled=true;
+  $("formMsg").textContent="Save થઈ રહ્યું છે...";
+
+  if(editingId){
+   await updateDoc(doc(db,"products",editingId),data);
+  }else{
+   await addDoc(collection(db,"products"),data);
+  }
+
+  $("formMsg").textContent="પ્રોડક્ટ Save થઈ ગઈ.";
+  resetForm();
+  await loadProducts();
+ }catch(e){
+  $("formMsg").textContent="ભૂલ: "+e.message;
+ }finally{
+  $("saveProduct").disabled=false;
+ }
+};
+
+async function loadProducts(){
+ try{
+  const snap=await getDocs(collection(db,"products"));
+  $("productList").innerHTML="";
+
+  if(snap.empty){
+   $("productList").textContent="હજુ કોઈ પ્રોડક્ટ નથી.";
+   return;
+  }
+
+  snap.forEach(d=>{
+   const p=d.data();
+   const div=document.createElement("div");
+   div.className="item";
+
+   const row=document.createElement("div");
+   row.className="row";
+
+   if(p.photo){
+    const img=document.createElement("img");
+    img.src=p.photo;
+    img.alt=p.name||"પ્રોડક્ટ";
+    row.appendChild(img);
+   }
+
+   const info=document.createElement("div");
+   const title=document.createElement("b");
+   title.textContent=p.name||"નામ નથી";
+   const detail=document.createElement("p");
+   detail.textContent="₹"+p.price+" / "+p.unit+" • "+(p.active?"ચાલુ":"બંધ");
+   info.append(title,detail);
+   row.appendChild(info);
+   div.appendChild(row);
+
+   const edit=document.createElement("button");
+   edit.textContent="Edit";
+   edit.onclick=()=>editProduct(d.id,p);
+
+   const del=document.createElement("button");
+   del.textContent="Delete";
+   del.className="danger";
+   del.onclick=()=>removeProduct(d.id);
+
+   div.append(edit,del);
+   $("productList").appendChild(div);
+  });
+ }catch(e){
+  $("productList").textContent="લોડ ભૂલ: "+e.message;
+ }
+}
+
+function editProduct(id,p){
+ editingId=id;
+ $("formTitle").textContent="પ્રોડક્ટ સુધારો";
+ $("productName").value=p.name||"";
+ $("category").value=p.category||"other";
+ $("price").value=p.price||"";
+ $("unit").value=p.unit||"piece";
+ $("active").checked=p.active!==false;
+
+ productPhotoData="";
+ $("productPhoto").value="";
+
+ if(p.photo){
+  $("productPreview").src=p.photo;
+  $("productPreview").classList.remove("hidden");
+ }else{
+  $("productPreview").classList.add("hidden");
+ }
+
+ $("saveProduct").textContent="ફેરફાર Save કરો";
+ $("cancelEdit").classList.remove("hidden");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function removeProduct(id){
+ if(!confirm("આ પ્રોડક્ટ Delete કરવી છે?"))return;
+ try{
+  await deleteDoc(doc(db,"products",id));
+  await loadProducts();
+ }catch(e){
+  alert("Delete ભૂલ: "+e.message);
+ }
+}
+
+function resetForm(){
+ editingId=null;
+ productPhotoData="";
+ $("productName").value="";
+ $("price").value="";
+ $("productPhoto").value="";
+ $("productPreview").classList.add("hidden");
+ $("active").checked=true;
+ $("formTitle").textContent="નવી પ્રોડક્ટ ઉમેરો";
+ $("saveProduct").textContent="પ્રોડક્ટ Save કરો";
+ $("cancelEdit").classList.add("hidden");
+}
+
+$("cancelEdit").onclick=resetForm;
+</script>
+</body>
+</html>
