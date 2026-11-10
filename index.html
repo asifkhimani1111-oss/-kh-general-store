@@ -463,22 +463,31 @@ function isGadhadaVillage(value){
 }
 
 function deliveryDetails(subtotal,village){
- if(!village.trim())return {charge:0,valid:false,message:"ગામનું નામ લખો."};
+ if(!village.trim()){
+  return {charge:0,valid:false,message:"ગામનું નામ લખો."};
+ }
 
  if(isGadhadaVillage(village)){
   return {charge:0,valid:true,message:"ગઢડા માટે ડિલિવરી ફ્રી છે."};
  }
 
  if(subtotal<1000){
-  return {charge:0,valid:false,message:"બીજા ગામ માટે ઓછામાં ઓછો ₹1,000નો ઓર્ડર જરૂરી છે."};
+  return {
+   charge:0,
+   valid:false,
+   message:"બીજા ગામ માટે ઓછામાં ઓછો ₹1,000નો ઓર્ડર જરૂરી છે."
+  };
  }
 
- if(subtotal<=2000){
-  return {charge:50,valid:true,message:"ડિલિવરી ચાર્જ ₹50 છે."};
- }
+ const charge = subtotal<=2000
+  ? 50
+  : 50+(subtotal-2000)*0.01;
 
- const charge=Math.round(subtotal*.01*100)/100;
- return {charge,valid:true,message:"ડિલિવરી ચાર્જ સામાનની રકમના 1% મુજબ છે."};
+ return {
+  charge:Math.round(charge*100)/100,
+  valid:true,
+  message:"ડિલિવરી ચાર્જ ₹50 + ₹2,000 ઉપરની રકમના 1% મુજબ છે."
+ };
 }
 
 function renderCart(){
