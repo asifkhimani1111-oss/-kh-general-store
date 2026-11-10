@@ -1,0 +1,643 @@
+
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#087443">
+<title>K.H GENERAL STORE - Seller</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f4;color:#17231c;font-family:Arial,sans-serif}
+header{background:#087443;color:white;padding:17px;text-align:center}
+header h2{margin:0;font-size:23px}
+header p{margin:5px 0 0;font-size:13px}
+main{max-width:750px;margin:auto;padding:13px}
+.section{background:white;padding:15px;border-radius:12px;margin:13px 0;box-shadow:0 2px 8px #0000000c}
+h3{color:#087443;margin:0 0 12px}
+input,select{width:100%;padding:12px;border:1px solid #d5dfd7;border-radius:8px;font-size:15px;margin:7px 0}
+button{border:0;border-radius:8px;padding:11px 14px;background:#087443;color:white;font-size:15px;cursor:pointer}
+button:disabled{opacity:.45}
+.primary{width:100%;padding:14px;font-weight:bold}
+.secondary{background:#52645a}
+.danger{background:#b3261e}
+.hidden{display:none!important}
+.muted{font-size:13px;color:#65736a;line-height:1.6}
+.status{padding:12px;background:#eef6ef;border-radius:8px;margin:10px 0;line-height:1.6}
+.good{color:#087443;font-weight:bold}
+.bad{color:#b3261e;font-weight:bold}
+.product{border:1px solid #e1e9e2;border-radius:10px;padding:10px;margin:10px 0;display:flex;gap:10px;align-items:center}
+.product img{width:75px;height:75px;object-fit:cover;border-radius:8px}
+.product-info{flex:1;min-width:0}
+.product-info b{display:block;margin-bottom:5px;overflow-wrap:anywhere}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.actions button{font-size:13px;padding:8px 10px}
+.shop-photo{width:100%;max-height:190px;object-fit:cover;border-radius:10px;margin-top:8px}
+hr{border:0;border-top:1px solid #e5ebe6;margin:15px 0}
+.notice{background:#fff5df;color:#785300;padding:12px;border-radius:8px;line-height:1.6}
+.empty{text-align:center;padding:20px;color:#68766c}
+.id-text{font-size:11px;color:#087443;overflow-wrap:anywhere;margin:4px 0}
+.field-label{display:block;font-size:13px;color:#52645a;margin-top:8px}
+</style>
+</head>
+<body>
+
+<header>
+<h2>K.H GENERAL STORE</h2>
+<p>Seller Login અને Dashboard</p>
+</header>
+
+<main>
+
+<section class="section" id="authSection">
+<h3 id="authTitle">Seller Login</h3>
+<input id="email" type="email" placeholder="Email સરનામું" autocomplete="email">
+<input id="password" type="password" placeholder="Password" autocomplete="current-password">
+<button class="primary" id="loginBtn">Login કરો</button>
+<hr>
+<p class="muted">નવા દુકાનદાર છો? તો નવું Seller એકાઉન્ટ બનાવો.</p>
+<button class="secondary primary" id="registerBtn">નવું એકાઉન્ટ બનાવો</button>
+<p id="authMessage" class="muted"></p>
+</section>
+
+<div id="dashboard" class="hidden">
+
+<section class="section">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<h3 style="margin:0">Seller Dashboard</h3>
+<button class="danger" id="logoutBtn">Logout</button>
+</div>
+<p class="muted" id="sellerEmail"></p>
+</section>
+
+<section class="section" id="shopSection">
+<h3 id="shopFormTitle">તમારી દુકાન બનાવો</h3>
+<div id="shopStatus" class="status"></div>
+
+<div id="expiredNotice" class="notice hidden">
+<b>તમારી દુકાનનો સમય પૂર્ણ થયો છે.</b><br>
+દુકાન ફરી ચાલુ કરવા માટે Admin ને
+<b>9426852334</b> પર સંપર્ક કરો.<br>
+30 દિવસ માટે ₹60 રોકડા Admin ને આપવાના રહેશે.
+</div>
+
+<div id="shopForm">
+<input id="shopName" placeholder="દુકાનનું નામ *">
+<input id="shopPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="મોબાઇલ / WhatsApp નંબર *">
+<label class="muted">દુકાનનો ફોટો પસંદ કરો</label>
+<input id="shopPhotoInput" type="file" accept="image/*">
+<img id="shopPhotoPreview" class="shop-photo hidden" alt="દુકાનનો ફોટો">
+<button class="primary" id="saveShopBtn">દુકાન સેવ કરો</button>
+</div>
+
+<p class="muted">
+નોંધ: દુકાનનું નામ, ફોન નંબર અને ફોટો તમે બદલી શકો છો.
+દુકાન ચાલુ કરવાની મંજૂરી માત્ર Admin આપી શકશે.
+</p>
+</section>
+
+<section class="section" id="productSection">
+<h3>તમારી પ્રોડક્ટ્સ</h3>
+<div class="status">કુલ પ્રોડક્ટ: <b id="productCount">0</b> / 30</div>
+
+<div id="productForm">
+<h3 id="productFormTitle">નવી પ્રોડક્ટ ઉમેરો</h3>
+<input id="productName" placeholder="પ્રોડક્ટનું નામ *">
+
+<label class="field-label">પ્રોડક્ટ કેટેગરી</label>
+<select id="productCategory">
+<option value="fruits">ફળો</option>
+<option value="vegetables">શાકભાજી</option>
+<option value="grocery">કરિયાણું</option>
+<option value="oil">તેલ</option>
+<option value="soap">સાબુ</option>
+<option value="clothes">કપડાં</option>
+<option value="footwear">ચપ્પલ / ફૂટવેર</option>
+<option value="other">અન્ય</option>
+</select>
+
+<input id="productPrice" type="number" min="0" step="0.01" placeholder="કિંમત ₹ *">
+
+<label class="field-label">વજન / માપ / યુનિટ</label>
+<select id="productUnit">
+<option value="kg">કિલો (kg)</option>
+<option value="ગ્રામ">ગ્રામ (g)</option>
+<option value="12 નંગ">12 નંગ (કેળા માટે)</option>
+<option value="નંગ">નંગ / પીસ</option>
+<option value="પેકેટ">પેકેટ</option>
+<option value="બોટલ">બોટલ</option>
+<option value="લીટર">લીટર (L)</option>
+<option value="ml">મિલીલીટર (ml)</option>
+<option value="મીટર">મીટર (m)</option>
+<option value="મિલીમીટર">મિલીમીટર (mm)</option>
+<option value="તોલા">તોલા</option>
+<option value="ડબ્બો">ડબ્બો</option>
+<option value="જોડી">જોડી</option>
+<option value="સાઇઝ">સાઇઝ</option>
+<option value="કલર">કલર</option>
+</select>
+
+<label class="field-label">સાઇઝ / ચપ્પલ નંબર (વૈકલ્પિક)</label>
+<input id="productSize" placeholder="દા.ત. 6, 7, 8, M, L, XL">
+
+<label class="field-label">કલર (વૈકલ્પિક)</label>
+<input id="productColor" placeholder="દા.ત. લાલ, કાળો, વાદળી">
+
+<label class="muted">પ્રોડક્ટનો ફોટો પસંદ કરો</label>
+<input id="productPhotoInput" type="file" accept="image/*">
+<img id="productPhotoPreview" class="shop-photo hidden" alt="પ્રોડક્ટનો ફોટો">
+
+<button class="primary" id="saveProductBtn">પ્રોડક્ટ સેવ કરો</button>
+<button class="secondary primary hidden" id="cancelEditBtn" style="margin-top:8px">ફેરફાર રદ કરો</button>
+</div>
+
+<hr>
+<div id="productsList">
+<div class="empty">પ્રોડક્ટ લોડ થઈ રહી છે...</div>
+</div>
+</section>
+
+<section class="section">
+<h3>દુકાન ડિલીટ કરો</h3>
+<p class="muted">આ કરવાથી તમારી દુકાન અને તેની બધી પ્રોડક્ટ્સ ડિલીટ થશે. આ કામ પાછું ફેરવી શકાશે નહીં.</p>
+<button class="danger primary" id="deleteShopBtn">મારી દુકાન ડિલીટ કરો</button>
+</section>
+
+</div>
+</main>
+
+<script type="module">
+import {auth,db} from "./firebase.js";
+
+import {
+ createUserWithEmailAndPassword,
+ signInWithEmailAndPassword,
+ onAuthStateChanged,
+ signOut
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+ collection,doc,getDocs,query,where,addDoc,updateDoc,deleteDoc,serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const $=id=>document.getElementById(id);
+
+let currentUser=null;
+let currentShop=null;
+let products=[];
+let editingProductId=null;
+let shopPhoto="";
+let productPhoto="";
+
+function message(text){$("authMessage").textContent=text;}
+
+function compressImage(file){
+ return new Promise((resolve,reject)=>{
+  if(!file){resolve("");return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+   const img=new Image();
+   img.onload=()=>{
+    const canvas=document.createElement("canvas");
+    const max=700;
+    const scale=Math.min(1,max/Math.max(img.width,img.height));
+    canvas.width=Math.round(img.width*scale);
+    canvas.height=Math.round(img.height*scale);
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    let quality=.75;
+    let result=canvas.toDataURL("image/jpeg",quality);
+    while(result.length>200000 && quality>.25){
+     quality-=.10;
+     result=canvas.toDataURL("image/jpeg",quality);
+    }
+    if(result.length>350000){
+     reject(new Error("ફોટો મોટો છે. નાનો ફોટો પસંદ કરો."));
+     return;
+    }
+    resolve(result);
+   };
+   img.onerror=()=>reject(new Error("ફોટો ખોલી શકાયો નથી."));
+   img.src=reader.result;
+  };
+  reader.onerror=()=>reject(new Error("ફોટો વાંચી શકાયો નથી."));
+  reader.readAsDataURL(file);
+ });
+}
+
+function showPreview(image,previewId){
+ const preview=$(previewId);
+ if(image){
+  preview.src=image;
+  preview.classList.remove("hidden");
+ }else{
+  preview.removeAttribute("src");
+  preview.classList.add("hidden");
+ }
+}
+
+$("shopPhotoInput").addEventListener("change",async e=>{
+ try{
+  const file=e.target.files[0];
+  if(!file)return;
+  shopPhoto=await compressImage(file);
+  showPreview(shopPhoto,"shopPhotoPreview");
+ }catch(error){
+  alert(error.message);
+  e.target.value="";
+ }
+});
+
+$("productPhotoInput").addEventListener("change",async e=>{
+ try{
+  const file=e.target.files[0];
+  if(!file)return;
+  productPhoto=await compressImage(file);
+  showPreview(productPhoto,"productPhotoPreview");
+ }catch(error){
+  alert(error.message);
+  e.target.value="";
+ }
+});
+
+function paidUntilMillis(value){
+ if(!value)return 0;
+ if(typeof value.toMillis==="function")return value.toMillis();
+ if(typeof value==="number")return value;
+ const date=new Date(value);
+ return date.getTime();
+}
+
+function shopIsActive(shop){
+ if(!shop||shop.active===false)return false;
+ if(!shop.paidUntil)return true;
+ return Date.now()<paidUntilMillis(shop.paidUntil);
+}
+
+function showAuth(){
+ $("authSection").classList.remove("hidden");
+ $("dashboard").classList.add("hidden");
+}
+
+function showDashboard(){
+ $("authSection").classList.add("hidden");
+ $("dashboard").classList.remove("hidden");
+ $("sellerEmail").textContent=currentUser.email||"";
+}
+
+async function findMyShop(){
+ const q=query(collection(db,"shops"),where("ownerUid","==",currentUser.uid));
+ const snap=await getDocs(q);
+ if(snap.empty){currentShop=null;return;}
+ if(snap.size>1)throw new Error("આ એકાઉન્ટ સાથે એકથી વધુ દુકાનો જોડાયેલી છે. Admin નો સંપર્ક કરો.");
+ currentShop={id:snap.docs[0].id,...snap.docs[0].data()};
+}
+
+async function loadDashboard(){
+ showDashboard();
+ try{
+  await findMyShop();
+
+  if(!currentShop){
+   $("shopFormTitle").textContent="તમારી દુકાન બનાવો";
+   $("shopStatus").textContent="હજુ તમારી દુકાન બનાવવામાં આવી નથી.";
+   $("shopName").value="";
+   $("shopPhone").value="";
+   shopPhoto="";
+   showPreview("","shopPhotoPreview");
+   $("productSection").classList.add("hidden");
+   $("deleteShopBtn").disabled=true;
+   return;
+  }
+
+  $("productSection").classList.remove("hidden");
+  $("deleteShopBtn").disabled=false;
+  $("shopName").value=currentShop.name||"";
+  $("shopPhone").value=currentShop.phone||"";
+  shopPhoto=currentShop.photo||"";
+  showPreview(shopPhoto,"shopPhotoPreview");
+  $("shopFormTitle").textContent="દુકાનની માહિતી બદલો";
+
+  const active=shopIsActive(currentShop);
+  const expiry=paidUntilMillis(currentShop.paidUntil);
+
+  if(active&&expiry){
+   const date=new Date(expiry).toLocaleString("gu-IN");
+   $("shopStatus").innerHTML='<span class="good">દુકાન ચાલુ છે</span><br>ચાલુ રહેવાની છેલ્લી તારીખ: '+date;
+   $("expiredNotice").classList.add("hidden");
+  }else if(active){
+   $("shopStatus").innerHTML='<span class="good">દુકાન ચાલુ છે</span><br>Admin દ્વારા મુદત નક્કી થયા પછી અહીં છેલ્લી તારીખ દેખાશે.';
+   $("expiredNotice").classList.add("hidden");
+  }else{
+   $("shopStatus").innerHTML='<span class="bad">દુકાન હાલમાં બંધ છે.</span><br>Admin દ્વારા ₹60 મળ્યા પછી દુકાન ચાલુ થશે.';
+   $("expiredNotice").classList.remove("hidden");
+  }
+
+  await loadProducts();
+ }catch(error){
+  console.error(error);
+  alert("ડેશબોર્ડ લોડ થઈ શક્યું નથી: "+error.message);
+ }
+}
+
+async function createShop(){
+ const name=$("shopName").value.trim();
+ const phone=$("shopPhone").value.trim();
+
+ if(!name||!phone){alert("દુકાનનું નામ અને મોબાઇલ નંબર લખો.");return;}
+ if(!/^[0-9]{10}$/.test(phone)){alert("મોબાઇલ નંબર 10 અંકનો હોવો જોઈએ.");return;}
+
+ $("saveShopBtn").disabled=true;
+ try{
+  await addDoc(collection(db,"shops"),{
+   ownerUid:currentUser.uid,name,phone,photo:shopPhoto,
+   active:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+  });
+  alert("દુકાન બનાવવામાં આવી છે. હવે Admin ને ₹60 રોકડા આપ્યા પછી જ દુકાન ચાલુ થશે.");
+  await loadDashboard();
+ }catch(error){
+  console.error(error);
+  alert("દુકાન સેવ થઈ નથી: "+error.message);
+ }finally{$("saveShopBtn").disabled=false;}
+}
+
+async function updateShop(){
+ if(!currentShop)return;
+ const name=$("shopName").value.trim();
+ const phone=$("shopPhone").value.trim();
+
+ if(!name||!phone){alert("દુકાનનું નામ અને મોબાઇલ નંબર લખો.");return;}
+ if(!/^[0-9]{10}$/.test(phone)){alert("મોબાઇલ નંબર 10 અંકનો હોવો જોઈએ.");return;}
+
+ $("saveShopBtn").disabled=true;
+ try{
+  await updateDoc(doc(db,"shops",currentShop.id),{
+   name,phone,photo:shopPhoto,updatedAt:serverTimestamp()
+  });
+  alert("દુકાનની માહિતી સેવ થઈ ગઈ.");
+  await loadDashboard();
+ }catch(error){
+  console.error(error);
+  alert("માહિતી સેવ થઈ નથી: "+error.message);
+ }finally{$("saveShopBtn").disabled=false;}
+}
+
+$("saveShopBtn").onclick=()=>currentShop?updateShop():createShop();
+
+async function loadProducts(){
+ if(!currentShop)return;
+ const q=query(collection(db,"products"),where("shopId","==",currentShop.id));
+ const snap=await getDocs(q);
+ products=snap.docs.map(d=>({id:d.id,...d.data()}));
+ renderProducts();
+}
+
+function renderProducts(){
+ $("productCount").textContent=products.length;
+ const box=$("productsList");
+ box.innerHTML="";
+
+ if(!products.length){
+  box.innerHTML='<div class="empty">હજુ કોઈ પ્રોડક્ટ ઉમેરવામાં આવી નથી.</div>';
+  return;
+ }
+
+ products.forEach(p=>{
+  const item=document.createElement("div");
+  item.className="product";
+
+  if(p.photo){
+   const img=document.createElement("img");
+   img.src=p.photo;
+   img.alt=p.name||"પ્રોડક્ટ";
+   item.appendChild(img);
+  }
+
+  const info=document.createElement("div");
+  info.className="product-info";
+
+  const name=document.createElement("b");
+  name.textContent=p.name||"પ્રોડક્ટ";
+
+  const idLine=document.createElement("div");
+  idLine.className="id-text";
+  idLine.textContent="પ્રોડક્ટ ID: "+p.id;
+
+  const details=document.createElement("div");
+  details.className="muted";
+  details.textContent="₹"+p.price+" / "+(p.unit||"નંગ");
+
+  const extra=document.createElement("div");
+  extra.className="muted";
+  const extras=[];
+  if(p.size)extras.push("સાઇઝ: "+p.size);
+  if(p.color)extras.push("કલર: "+p.color);
+  extra.textContent=extras.join(" | ");
+
+  const state=document.createElement("div");
+  state.className=p.active===false?"bad":"good";
+  state.textContent=p.active===false?"બંધ":"ચાલુ";
+
+  const actions=document.createElement("div");
+  actions.className="actions";
+
+  const edit=document.createElement("button");
+  edit.textContent="ફેરફાર";
+  edit.onclick=()=>editProduct(p);
+
+  const toggle=document.createElement("button");
+  toggle.className="secondary";
+  toggle.textContent=p.active===false?"ચાલુ કરો":"બંધ કરો";
+  toggle.onclick=()=>toggleProduct(p);
+
+  const remove=document.createElement("button");
+  remove.className="danger";
+  remove.textContent="ડિલીટ";
+  remove.onclick=()=>removeProduct(p);
+
+  actions.append(edit,toggle,remove);
+  info.append(name,idLine,details,extra,state,actions);
+  item.appendChild(info);
+  box.appendChild(item);
+ });
+}
+
+function resetProductForm(){
+ editingProductId=null;
+ $("productFormTitle").textContent="નવી પ્રોડક્ટ ઉમેરો";
+ $("productName").value="";
+ $("productPrice").value="";
+ $("productCategory").value="fruits";
+ $("productUnit").value="kg";
+ $("productSize").value="";
+ $("productColor").value="";
+ $("productPhotoInput").value="";
+ productPhoto="";
+ showPreview("","productPhotoPreview");
+ $("saveProductBtn").textContent="પ્રોડક્ટ સેવ કરો";
+ $("cancelEditBtn").classList.add("hidden");
+}
+
+function editProduct(p){
+ editingProductId=p.id;
+ $("productFormTitle").textContent="પ્રોડક્ટમાં ફેરફાર કરો";
+ $("productName").value=p.name||"";
+ $("productPrice").value=p.price??"";
+ $("productCategory").value=p.category||"other";
+ $("productUnit").value=p.unit||"નંગ";
+ $("productSize").value=p.size||"";
+ $("productColor").value=p.color||"";
+ productPhoto=p.photo||"";
+ $("productPhotoInput").value="";
+ showPreview(productPhoto,"productPhotoPreview");
+ $("saveProductBtn").textContent="ફેરફાર સેવ કરો";
+ $("cancelEditBtn").classList.remove("hidden");
+ $("productForm").scrollIntoView({behavior:"smooth"});
+}
+
+$("cancelEditBtn").onclick=resetProductForm;
+
+async function saveProduct(){
+ if(!currentShop){alert("પહેલાં દુકાન બનાવો.");return;}
+ if(!shopIsActive(currentShop)){alert("તમારી દુકાન બંધ છે. Admin પાસે દુકાન ચાલુ કરાવો.");return;}
+
+ const name=$("productName").value.trim();
+ const price=Number($("productPrice").value);
+ const category=$("productCategory").value;
+ const unit=$("productUnit").value;
+ const size=$("productSize").value.trim();
+ const color=$("productColor").value.trim();
+
+ if(!name||!Number.isFinite(price)||price<=0){
+  alert("પ્રોડક્ટનું નામ અને સાચી કિંમત લખો.");
+  return;
+ }
+
+ if(!editingProductId&&products.length>=30){
+  alert("એક દુકાનમાં વધુમાં વધુ 30 પ્રોડક્ટ જ ઉમેરી શકાય છે.");
+  return;
+ }
+
+ $("saveProductBtn").disabled=true;
+ try{
+  const data={
+   name,price,category,unit,size,color,
+   photo:productPhoto,
+   shopId:currentShop.id,
+   updatedAt:serverTimestamp()
+  };
+
+  if(editingProductId){
+   await updateDoc(doc(db,"products",editingProductId),data);
+   alert("પ્રોડક્ટ અપડેટ થઈ ગઈ. તેનો Product ID બદલાયો નથી.");
+  }else{
+   // Firestore addDoc આપમેળે દરેક પ્રોડક્ટને નવો યુનિક Document ID આપે છે.
+   const newProduct=await addDoc(collection(db,"products"),{
+    ...data,
+    active:true,
+    createdAt:serverTimestamp()
+   });
+   alert("નવી પ્રોડક્ટ ઉમેરાઈ ગઈ.\nProduct ID: "+newProduct.id);
+  }
+
+  resetProductForm();
+  await loadProducts();
+ }catch(error){
+  console.error(error);
+  alert("પ્રોડક્ટ સેવ થઈ નથી: "+error.message);
+ }finally{$("saveProductBtn").disabled=false;}
+}
+
+$("saveProductBtn").onclick=saveProduct;
+
+async function toggleProduct(p){
+ try{
+  await updateDoc(doc(db,"products",p.id),{
+   active:p.active===false,
+   updatedAt:serverTimestamp()
+  });
+  await loadProducts();
+ }catch(error){
+  alert("પ્રોડક્ટની સ્થિતિ બદલી શકાઈ નથી: "+error.message);
+ }
+}
+
+async function removeProduct(p){
+ if(!confirm('"'+p.name+'" પ્રોડક્ટ ડિલીટ કરવી છે?'))return;
+ try{
+  await deleteDoc(doc(db,"products",p.id));
+  await loadProducts();
+ }catch(error){
+  alert("પ્રોડક્ટ ડિલીટ થઈ નથી: "+error.message);
+ }
+}
+
+async function deleteMyShop(){
+ if(!currentShop)return;
+ if(!confirm("શું તમે ખરેખર તમારી દુકાન અને તેની બધી પ્રોડક્ટ્સ ડિલીટ કરવા માંગો છો?"))return;
+ if(!confirm("આ કામ પાછું ફેરવી શકાશે નહીં. ફરી ખાતરી કરો."))return;
+
+ $("deleteShopBtn").disabled=true;
+ try{
+  const q=query(collection(db,"products"),where("shopId","==",currentShop.id));
+  const snap=await getDocs(q);
+  for(const product of snap.docs){
+   await deleteDoc(doc(db,"products",product.id));
+  }
+  await deleteDoc(doc(db,"shops",currentShop.id));
+  currentShop=null;
+  products=[];
+  alert("તમારી દુકાન અને તેની પ્રોડક્ટ્સ ડિલીટ થઈ ગઈ.");
+  await loadDashboard();
+ }catch(error){
+  console.error(error);
+  alert("દુકાન ડિલીટ થઈ નથી: "+error.message);
+ }finally{$("deleteShopBtn").disabled=false;}
+}
+
+$("deleteShopBtn").onclick=deleteMyShop;
+
+$("loginBtn").onclick=async()=>{
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||!password){message("Email અને Password લખો.");return;}
+ $("loginBtn").disabled=true;
+ try{
+  await signInWithEmailAndPassword(auth,email,password);
+  message("");
+ }catch(error){
+  message("Login થઈ શક્યું નથી: "+error.message);
+ }finally{$("loginBtn").disabled=false;}
+};
+
+$("registerBtn").onclick=async()=>{
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||!password){message("નવું એકાઉન્ટ બનાવવા Email અને Password લખો.");return;}
+ if(password.length<6){message("Password ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.");return;}
+ if(!confirm("આ Email થી નવું Seller એકાઉન્ટ બનાવવું છે?"))return;
+
+ $("registerBtn").disabled=true;
+ try{
+  await createUserWithEmailAndPassword(auth,email,password);
+  message("એકાઉન્ટ બની ગયું. હવે તમારી દુકાનની માહિતી ભરો.");
+ }catch(error){
+  message("એકાઉન્ટ બની શક્યું નથી: "+error.message);
+ }finally{$("registerBtn").disabled=false;}
+};
+
+$("logoutBtn").onclick=async()=>{await signOut(auth);};
+
+onAuthStateChanged(auth,async user=>{
+ currentUser=user;
+ if(!user){
+  currentShop=null;
+  products=[];
+  showAuth();
+  return;
+ }
+ await loadDashboard();
+});
+</script>
+</body>
+</html>
